@@ -12,8 +12,8 @@ def llfun(act, pred):
     return (-(~(act == pred)).astype(int) * math.log(1e-15)).sum() / len(act)
 
 def readData():
-    train = pd.read_csv('data/train.csv', parse_dates=['Dates'])[['X', 'Y', 'Category']]
-    test = pd.read_csv('data/test.csv', parse_dates=['Dates'])
+    train = pd.read_csv('data/train/train.csv', parse_dates=['Dates'])[['X', 'Y', 'Category']]
+    test = pd.read_csv('data/test/test.csv', parse_dates=['Dates'])
     print("Number of cases in the training set: %s" % len(train))
     print("Number of cases in the testing set: %s" % len(test))
     return (train,test)
@@ -87,11 +87,11 @@ def dtreesClassifier(train, test):
 #def createSubmissionFile(lables, fileName):
 	
 def main():
-   (train, test) = readData()
-   (trainOnly,evaluateOnly) = divideIntoTrainAndEvaluationSet(0.8, train)
+    (train, test) = readData()
+    (trainOnly,evaluateOnly) = divideIntoTrainAndEvaluationSet(0.8, train)
    
-   # Call the classifiers - replace with your classifier
-   predictedLabels = classify("knn",trainOnly, evaluateOnly, test)
-   print(pridictedLabels)
+    # Call the classifiers - replace with your classifier
+    predictedLabels = classify("knn",trainOnly, evaluateOnly, test)
+    print (predictedLabels)
 
 main()
