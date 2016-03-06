@@ -5,6 +5,7 @@ import zipfile
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
+from sklearn.svm import SVC
 
 
 def accuracy(actual, predicted):
@@ -21,10 +22,13 @@ def llfun(act, pred):
     return (-(~(act == pred)).astype(int) * math.log(1e-15)).sum() / len(act)
 
 def readData():
-    train = pd.read_csv('data/train/train.csv', parse_dates=['Dates'])[['X', 'Y', 'Category']]
+    train = pd.read_csv('data/train/train.csv', parse_dates=['Dates'])[['Dates', 'DayOfWeek', 'PdDistrict', 'Address', 'X', 'Y', 'Category']]
     test = pd.read_csv('data/test/test.csv', parse_dates=['Dates'])
     print("Number of cases in the training set: %s" % len(train))
     print("Number of cases in the testing set: %s" % len(test))
+    '''print (train.head(10).to_string())
+    print("Testing Data")
+    print (test.head(10).to_string())'''
     return (train,test)
 
 def divideIntoTrainAndEvaluationSet(fraction, train):
@@ -90,10 +94,14 @@ def svmClassifier(train,evaluate, test):
     x = train[['X', 'Y']]
     y = train['Category'].astype('category')
     actual = evaluate['Category'].astype('category')
-    svm_classifier = svm.SVC()
+    svm_classifier = svm.SVC(decision_function_shape='ovr')
     svm_classifier.fit(x, y)
+    print('Model fitted..')
     outcomes = svm_classifier.predict(evaluate[['X', 'Y']])
-    print (accuracy(actual, outcomes))
+    print('Outcomes predicted.. Calculating log loss')
+    val = llfun(actual, outcomes)
+    print("Value of LogLoss: " + str(val))
+    #print (accuracy(actual, outcomes))
     return outcomes
 
 def logisticRegressionClassifier(train, test):
@@ -106,7 +114,14 @@ def dtreesClassifier(train, test):
 
 def main():
     (train, test) = readData()
-    (trainOnly,evaluateOnly) = divideIntoTrainAndEvaluationSet(0.8, train)
+    total_train = len(train)
+    subset_size = 0.1*total_train
+    print("the size of subset "+str(subset_size))
+    for_train = train.head(int(subset_size))
+
+    (trainOnly,evaluateOnly) = divideIntoTrainAndEvaluationSet(0.8, for_train)
+    print ("Size of trainOnly" +str(len(trainOnly)))
+    print ("Size of evaluateOnly" + str(len(evaluateOnly)))
 
     # Call the classifiers - replace with your classifier
     #predictedLabels = classify("knn",trainOnly, evaluateOnly, test)
@@ -115,5 +130,8 @@ def main():
     #Classifier SVM
     predictedLabels = classify("svm",trainOnly, evaluateOnly, test)
     print (predictedLabels)
+    for i in range(1, len(predictedLabels)):
+        print(predictedLabels[i])
+    #print(accuracy(evaluateOnly['Categories'], predictedLabels))
 
 main()
