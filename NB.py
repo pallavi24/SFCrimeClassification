@@ -66,6 +66,8 @@ def NaiveBayesClassifier(train, evaluate, test):
                'CENTRAL', 'INGLESIDE', 'MISSION', 'NORTHERN', 'PARK', 'RICHMOND', 'SOUTHERN', 'TARAVAL', 'TENDERLOIN']]
     #print(x[])
     y = train['Category'].astype('category')
+    #print(pd.unique(y.ravel()))
+    #all_categories =pd.unique(y.ravel())
     actual = evaluate['Category'].astype('category')
     classifier = GaussianNB()
 
@@ -75,6 +77,7 @@ def NaiveBayesClassifier(train, evaluate, test):
     classifier.fit(x,y)#.predict(evaluate[['X', 'Y', 'DayOfWeek']])
     print(classifier)
     y_pred = classifier.predict(x_test)
+    y_prob = classifier.predict_proba(x_test)
     val = llfun(actual, y_pred)
     print('Log loss: ' + str(val))
 
@@ -85,8 +88,8 @@ def NaiveBayesClassifier(train, evaluate, test):
     #assert isinstance(x_test, object)
     #test_outcomes = classifier.predict(x_test)
     #submit = pd.DataFrame({'Id': test.Id.tolist()})
-    #for category in y.cat.categories:
-    #    submit[category] = np.where(test_outcomes == category, 1, 0)
+    #for category in all_categories:
+    #    submit[category] = np.where(y_pred == category, 1, 0)
 
     #submit.to_csv('NB_test.csv', index = False)
     return y_pred
