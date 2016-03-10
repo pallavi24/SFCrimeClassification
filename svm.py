@@ -5,7 +5,8 @@ import zipfile
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
-from sklearn.svm import SVC
+from sklearn.pipeline import Pipeline
+
 
 
 def accuracy(actual, predicted):
@@ -48,37 +49,10 @@ def classify(name, train, evaluate, test):
         return logisticRegressionClassifier(train, evaluate, test)
     elif(name == "dtrees"):
         return dtreesClassifier(train, evaluate, test)
+    elif(name == "svm_pipeline"):
+        return svm_pipeline(train, evaluate, test)
     else:
         print(" Specify the right name of the classifier : knn/svm/logit/dtrees")
-
-
-def knnClassifier(train, evaluate, test):
-    print('In K nerarest neighbour')
-    x = train[['X', 'Y']]
-    y = train['Category'].astype('category')
-    actual = evaluate['Category'].astype('category')
-
-    # Fit
-    logloss = []
-    for i in range(1, 50, 1):
-        knn = KNeighborsClassifier(n_neighbors=i)
-        knn.fit(x, y)
-
-        # Predict on test set
-        outcome = knn.predict(evaluate[['X', 'Y']])
-
-        # Logloss
-        logloss.append(llfun(actual, outcome))
-
-    plt.plot(logloss)
-    plt.savefig('n_neighbors_vs_logloss.png')
-
-    # Fit test data
-    x_test = test[['X', 'Y']]
-    knn = KNeighborsClassifier(n_neighbors=40)
-    knn.fit(x, y)
-    outcomes = knn.predict(x_test)
-    return outcomes
 
 # Move this to a separate function later
 '''
@@ -94,7 +68,7 @@ def svmClassifier(train,evaluate, test):
     x = train[['X', 'Y']]
     y = train['Category'].astype('category')
     actual = evaluate['Category'].astype('category')
-    svm_classifier = svm.SVC(decision_function_shape='ovr')
+    svm_classifier = svm.LinearSVC(multi_class='ovr')
     svm_classifier.fit(x, y)
     print('Model fitted..')
     outcomes = svm_classifier.predict(evaluate[['X', 'Y']])
@@ -102,6 +76,18 @@ def svmClassifier(train,evaluate, test):
     val = llfun(actual, outcomes)
     print("Value of LogLoss: " + str(val))
     #print (accuracy(actual, outcomes))
+    #return outcomes
+
+    #Testing data
+    x_test = test[['X', 'Y']]
+    #knn = KNeighborsClassifier(n_neighbors=40)
+    svm_classifier.fit(x, y)
+    outcomes = svm_classifier.predict(x_test)
+
+    submit = pd.DataFrame({'Id': test.Id.tolist()})
+    for category in y.cat.categories:
+        submit[category] = np.where(outcomes == category, 1, 0)
+    submit.to_csv('svm.csv')
     return outcomes
 
 def logisticRegressionClassifier(train, test):
@@ -111,7 +97,37 @@ def dtreesClassifier(train, test):
     print('In decision trees')
 
 #def createSubmissionFile(lables, fileName):
+'''
+def svm_pipeline(train,evaluate, test):
+    x = train[['X', 'Y']]
+    y = train['Category'].astype('category')
+    actual = evaluate['Category'].astype('category')
+    clf1 = svm.SVC(kernel='linear')
+    #clf2 = svm.SVC(kernel='poly')
+    classifier = Pipeline([('First', clf1), ('Second', clf2)])
+    #################
+    classifier.set_params(svc__C=.1).fit(x, y)
+    print('Model fitted..')
+    outcomes = classifier.predict(evaluate[['X', 'Y']])
+    print('Outcomes predicted.. Calculating log loss')
+    val = llfun(actual, outcomes)
+    print("Value of LogLoss: " + str(val))
+    #print (accuracy(actual, outcomes))
+    #return outcomes
 
+    #Testing data
+    x_test = test[['X', 'Y']]
+    #knn = KNeighborsClassifier(n_neighbors=40)
+    classifier.fit(x, y)
+    outcomes = classifier.predict(x_test)
+
+    submit = pd.DataFrame({'Id': test.Id.tolist()})
+    for category in y.cat.categories:
+        submit[category] = np.where(outcomes == category, 1, 0)
+    submit.to_csv('svm.csv')
+    return outcomes
+    ######################
+'''
 def main():
     (train, test) = readData()
     total_train = len(train)
@@ -129,9 +145,18 @@ def main():
 
     #Classifier SVM
     predictedLabels = classify("svm",trainOnly, evaluateOnly, test)
+
+
     print (predictedLabels)
+
     for i in range(1, len(predictedLabels)):
         print(predictedLabels[i])
+
+    '''
+    y = train['Category'].astype('category')
+    for i in range(1, len(y)):
+        print(y[i])
     #print(accuracy(evaluateOnly['Categories'], predictedLabels))
+    '''
 
 main()
